@@ -21,6 +21,7 @@
 #include "Physics/Multinucleon/XSection/NievesSimoVacasMECPXSec2016.h"
 #include "Physics/Multinucleon/XSection/MECUtils.h"
 #include "Physics/XSectionIntegration/XSecIntegratorI.h"
+#include <TSpline.h>
 
 using namespace genie;
 using namespace genie::constants;
@@ -169,7 +170,7 @@ double NievesSimoVacasMECPXSec2016::XSec(
   /// \todo Shouldn't we get this from the nuclear model?
   int nu_pdg = interaction->InitState().ProbePdg();
   double Q_value = genie::utils::mec::Qvalue(target_pdg, nu_pdg);
-
+  
   // By default, we will compute the full cross-section. If a resonance is
   // set, we will calculate the part of the cross-section with an internal
   // Delta line without a final state pion (usually called PPD for pioness
@@ -292,6 +293,10 @@ double NievesSimoVacasMECPXSec2016::XSec(
     xsec = 0;
   }
 
+  // Apply scaling factors on the corresponding region : 
+  double scale_region = GetScaling( Q0, Q3 ) ;
+  xsec *= scale_region ;
+
   return xsec;
 }
 //_________________________________________________________________________
@@ -314,6 +319,64 @@ bool NievesSimoVacasMECPXSec2016::ValidProcess(
     return true;
 }
 //_________________________________________________________________________
+double NievesSimoVacasMECPXSec2016::ScaleFunction(const double W, const double W1, const double W2, const double s1, const double s2) const {
+
+  double scale = ( W1 * s2 - W2 * s1 ) + ( s1 - s2 ) * W ;
+  scale /= W1 - W2 ; 
+
+  return scale ; 
+}
+
+//_________________________________________________________________________
+
+double NievesSimoVacasMECPXSec2016::GetScaling(const double Q0, const double Q3 ) const {
+
+  // The Scaling is done using the "experimenter's W", which assumes a single nucleon
+  // See motivation in : https://arxiv.org/pdf/1601.02038.pdf 
+  // Store average nucleon mass and Delta mass: 
+  double Mn = ( PDGLibrary::Instance()->Find(kPdgProton)->Mass() + PDGLibrary::Instance()->Find(kPdgNeutron)->Mass() ) * 0.5 ;  
+  double MDelta = PDGLibrary::Instance()->Find(kPdgP33m1232_DeltaP)->Mass();
+
+  // Calculate experimental W_1 and W_2 for a given event.
+  // These are the Minimum and Maximum W values for a given interaction:
+  // Use interpolation in q0q3 space to get the minimum q0. It is not energy dependent
+  // Can I improve this?
+  // Add vector with information at the lower limit
+  double q0_min[] = { 0.0479, 0.0288, 0.0192, 0.0288, 0.029, 0.0415, 0.0511, 0.0735, 0.1054, 0.1374, 0.1821, 0.2300, 0.2843, 0.3546, 0.4313, 0.4824};
+  double q3_min[] = { 0.054, 0.0963, 0.2139, 0.299, 0.3719, 0.4451, 0.5125, 0.5973, 0.6802, 0.7630, 0.8401, 0.9114, 1.0058, 1.0790, 1.1676, 1.1946};
+
+  TSpline3 * q0_q3_min = new TSpline3("q0_q3_min",q3_min,q0_min,16);
+  double minq0 = q0_q3_min->Eval(Q3) ;
+  double W_1 = sqrt( pow(Mn,2) + 2*Mn*minq0 - pow(Q3,2) + pow(minq0,2) ) ;
+  
+  // For the other variables, we impose:
+  double W_2 = sqrt( pow(Mn,2) + 2*Mn*Q0 ) ; // Imposing Q2 = 0 
+  double W_dip = 1.12 ; // GeV. See reference
+
+  // Calculate event 
+  double W = sqrt( pow(Mn,2) + 2*Mn*Q0 - pow(Q3,2) + pow(Q0,2) ) ;
+
+  // Get scaling factor depending on the W value. There are four possible regions:
+  // 1) W_1<= W < Mn
+  // 2) Mn <= W < W_dip
+  // 2) W_dip <= W < MDelta
+  // 3) MDelta<= W < W_2
+  double scale_region = 1.; 
+  if ( W >= W_1 && W < Mn ) {
+    scale_region = ScaleFunction( W, W_1, Mn, 1., fXSecScaleQELRegion ) ; 
+  } else if ( W >= Mn && W < W_dip ) {
+    scale_region = ScaleFunction( W, Mn, W_dip, fXSecScaleQELRegion, 1. ) ; 
+  } else if ( W >= W_dip && W < MDelta ) {
+    scale_region = ScaleFunction( W, W_dip, MDelta, 1., fXSecScaleRESRegion ) ; 
+  } else if ( W >= MDelta && W < W_2 ) {
+    scale_region = ScaleFunction( W, MDelta, W_2, fXSecScaleRESRegion, 1. ) ;
+  }
+
+  return scale_region ; 
+}
+
+//_________________________________________________________________________
+
 void NievesSimoVacasMECPXSec2016::Configure(const Registry & config)
 {
     Algorithm::Configure(config);
@@ -330,7 +393,9 @@ void NievesSimoVacasMECPXSec2016::LoadConfig(void)
 {
 	// Cross section scaling factor
 	GetParam( "MEC-CC-XSecScale", fXSecScale ) ;
-
+	GetParam( "MEC-CC-XSecScale-QELRegion", fXSecScaleQELRegion ) ;
+	GetParam( "MEC-CC-XSecScale-RESRegion", fXSecScaleRESRegion ) ;
+	
 	fHadronTensorModel = dynamic_cast<const HadronTensorModelI *> (
           this->SubAlg("HadronTensorAlg") );
         assert( fHadronTensorModel );

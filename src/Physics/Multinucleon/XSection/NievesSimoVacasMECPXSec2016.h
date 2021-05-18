@@ -47,7 +47,8 @@ public:
   double XSec            (const Interaction * i, KinePhaseSpace_t k) const;
   double Integral        (const Interaction * i) const;
   bool   ValidProcess    (const Interaction * i) const;
-
+  double ScaleFunction   (const double W, const double W1, const double W2, const double s1, const double s2) const;
+  double GetScaling      (const double Q0, const double Q3 ) const ;
   // override the Algorithm::Configure methods to load configuration
   // data to private data members
   void Configure (const Registry & config);
@@ -59,6 +60,8 @@ private:
   void LoadConfig (void);
 
   double fXSecScale; ///< external xsec scaling factor
+  double fXSecScaleQELRegion; ///< external xsec scaling factor applied to the QEL region
+  double fXSecScaleRESRegion; ///< external xsec scaling factor applied to the RES region
 
   const HadronTensorModelI* fHadronTensorModel;
 
