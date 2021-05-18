@@ -284,6 +284,13 @@ double NievesSimoVacasMECPXSec2016::XSec(
   // Apply given scaling factor
   xsec *= fXSecScale;
 
+  // Scale Delta component only or PN component:
+  if ( delta ) {
+    xsec *= fXSecScaleDelta;
+  } else {
+    xsec *= fXSecScalePN;
+  }
+
   if ( kps != kPSTlctl ) {
     LOG("NievesSimoVacasMEC", pWARN)
       << "Doesn't support transformation from "
@@ -331,6 +338,10 @@ void NievesSimoVacasMECPXSec2016::LoadConfig(void)
 	// Cross section scaling factor
 	GetParam( "MEC-CC-XSecScale", fXSecScale ) ;
 
+	// Scale Delta or pn component
+	GetParam( "MEC-CC-XSecScale-Delta", fXSecScaleDelta ) ;
+	GetParam( "MEC-CC-XSecScale-PN", fXSecScalePN ) ;
+ 
 	fHadronTensorModel = dynamic_cast<const HadronTensorModelI *> (
           this->SubAlg("HadronTensorAlg") );
         assert( fHadronTensorModel );

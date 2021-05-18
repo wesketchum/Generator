@@ -59,6 +59,8 @@ private:
   void LoadConfig (void);
 
   double fXSecScale; ///< external xsec scaling factor
+  double fXSecScaleDelta; ///< external xsec scaling factor for Delta component only
+  double fXSecScalePN; ///< external xsec scaling factor for PN component only
 
   const HadronTensorModelI* fHadronTensorModel;
 
