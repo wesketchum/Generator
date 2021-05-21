@@ -178,8 +178,6 @@ double NievesSimoVacasMECPXSec2016::XSec(
   bool delta = interaction->ExclTag().KnownResonance();
   bool pn    = (interaction->InitState().Tgt().HitNucPdg() == kPdgClusterNP);
 
-  std::cout << " delta = " << delta << " pn =" << pn << std::endl;
-
   double xsec_all = 0.;
   double xsec_pn  = 0.;
   if ( delta ) {
