@@ -7,12 +7,15 @@ Configuration for the Nieves, Simo and Vacas (Valencia) MEC cross-section model
 
 Configurable Parameters:
 .....................................................................................................
-Name                   Type     Optional   Comment                      Default
+Name                     Type     Optional   Comment                      Default
 .....................................................................................................
-MEC-CC-XSecScale       double   Yes        XSec Scaling factor          GPL value
-MEC-CC-XSecScale-Delta double   Yes        XSec Scaling factor for      GPL value
-                                           Delta component
-MEC-CC-XSecScale-PN    double   Yes        XSec Scaling factor for PN   GPL value
+MEC-CC-XSecScale         double   Yes        XSec Scaling factor          GPL value
+MEC-CC-XSecScale-Delta   double   Yes        XSec Scaling factor for      GPL value
+                                             Delta component
+MEC-CC-XSecScale-DeltaPN double   Yes        XSec Scaling factor for      GPL value
+                                             scattering on pn pairs via
+					     virtual delta
+MEC-CC-XSecScale-PN      double   Yes        XSec Scaling factor for PN   GPL value
                                            component
 -->
   <param_set name="Default"> 
@@ -23,6 +26,8 @@ MEC-CC-XSecScale-PN    double   Yes        XSec Scaling factor for PN   GPL valu
       <param type="double" name="MEC-CC-XSecScale"> 1.000 </param>
 
       <param type="double" name="MEC-CC-XSecScale-Delta"> 1.000 </param>
+
+      <param type="double" name="MEC-CC-XSecScale-DeltaPN"> 1.000 </param>
 
       <param type="double" name="MEC-CC-XSecScale-PN"> 1.000 </param>
   </param_set>
