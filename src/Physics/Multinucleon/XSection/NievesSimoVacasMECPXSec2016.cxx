@@ -178,6 +178,8 @@ double NievesSimoVacasMECPXSec2016::XSec(
   bool delta = interaction->ExclTag().KnownResonance();
   bool pn    = (interaction->InitState().Tgt().HitNucPdg() == kPdgClusterNP);
 
+  std::cout << " delta = " << delta << " pn =" << pn << std::endl;
+
   double xsec_all = 0.;
   double xsec_pn  = 0.;
   if ( delta ) {
@@ -205,6 +207,9 @@ double NievesSimoVacasMECPXSec2016::XSec(
     xsec_all = tensor_delta_all->dSigma_dT_dCosTheta(interaction, Q_value);
     xsec_pn = tensor_delta_pn->dSigma_dT_dCosTheta(interaction, Q_value);
 
+    xsec_all *= fXSecScaleDelta;
+    xsec_all *= fXSecScaleDeltaPN;
+
   }
   else {
 
@@ -230,8 +235,10 @@ double NievesSimoVacasMECPXSec2016::XSec(
 
     xsec_all = tensor_full_all->dSigma_dT_dCosTheta(interaction, Q_value);
     xsec_pn = tensor_full_pn->dSigma_dT_dCosTheta(interaction, Q_value);
-  }
 
+    xsec_pn *= fXSecScalePN;
+  }
+  
   // We need to scale the cross section appropriately if
   // we are using a hadronic tensor for a nuclide that is different
   // from the actual target
@@ -284,13 +291,6 @@ double NievesSimoVacasMECPXSec2016::XSec(
   // Apply given scaling factor
   xsec *= fXSecScale;
 
-  // Scale Delta component only or PN component:
-  if ( delta ) {
-    xsec *= fXSecScaleDelta;
-  } else {
-    xsec *= fXSecScalePN;
-  }
-
   if ( kps != kPSTlctl ) {
     LOG("NievesSimoVacasMEC", pWARN)
       << "Doesn't support transformation from "
@@ -340,6 +340,7 @@ void NievesSimoVacasMECPXSec2016::LoadConfig(void)
 
 	// Scale Delta or pn component
 	GetParam( "MEC-CC-XSecScale-Delta", fXSecScaleDelta ) ;
+	GetParam( "MEC-CC-XSecScale-DeltaPN", fXSecScaleDeltaPN ) ;
 	GetParam( "MEC-CC-XSecScale-PN", fXSecScalePN ) ;
  
 	fHadronTensorModel = dynamic_cast<const HadronTensorModelI *> (

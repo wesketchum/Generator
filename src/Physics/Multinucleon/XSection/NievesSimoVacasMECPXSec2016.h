@@ -60,6 +60,7 @@ private:
 
   double fXSecScale; ///< external xsec scaling factor
   double fXSecScaleDelta; ///< external xsec scaling factor for Delta component only
+  double fXSecScaleDeltaPN; ///< external xsec scaling factor scattering on pn paris via virtual Delta
   double fXSecScalePN; ///< external xsec scaling factor for PN component only
 
   const HadronTensorModelI* fHadronTensorModel;
